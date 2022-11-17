@@ -1,0 +1,103 @@
+name: EKS build and deploy pipeline
+
+on:
+  workflow_call:
+    inputs:
+      CONTAINER_REPOSITORY:
+        required: true
+        type: string
+      CONTAINER_BUILD_TARGET:
+        required: false
+        type: string
+        default: ""
+      CONTAINER_PUSH_BRANCH:
+        required: false
+        type: boolean
+        default: true
+      CONTAINER_PUSH_SHA:
+        required: false
+        type: boolean
+        default: true
+      AWS_ROLE:
+        required: true
+        type: string
+      AWS_REGION:
+        required: false
+        type: string
+        default: us-east-1
+    secrets:
+      SSH_KEY_BASE64:
+        required: true
+
+# Cancel in progress builds
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ inputs.AWS_ROLE }}
+          aws-region: ${{ inputs.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Image tag names
+        id: tags
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+          CONTAINER_REPOSITORY: ${{ inputs.CONTAINER_REPOSITORY }}
+        run: |
+          BRANCH=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')
+          BRANCH_TAG="$ECR_REGISTRY/$CONTAINER_REPOSITORY:$BRANCH"
+          echo "BRANCH_TAG=$BRANCH_TAG" >> $GITHUB_OUTPUT
+
+          SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
+          SHA_TAG="$ECR_REGISTRY/$CONTAINER_REPOSITORY:$SHA"
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_OUTPUT
+
+      - name: Pre-Build
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+          CACHE_TAG: ${{steps.tags.outputs.BRANCH_TAG}}
+        run: |
+          docker pull $CACHE_TAG || true
+
+      - name: Build
+        env:
+          TARGET: ${{ inputs.CONTAINER_BUILD_TARGET || "" }}
+          SHA_TAG: ${{ steps.tags.outputs.SHA_TAG }}
+          BRANCH_TAG: ${{ steps.tags.outputs.BRANCH_TAG }}
+          BUILD_ARGS: ""
+        run: |
+          declare -a build_params
+          build_params=( --tag "$BRANCH_TAG" --tag "$SHA_TAG" )
+          build_params=( --target "$TARGET" "${build_params[@]}" ) #TODO if $TARGET
+          build_params=( --build-arg SSH_KEY=${{ secrets.SSH_KEY_BASE64}} "${build_params[@]}" )
+          build_params=( --cache-from $BRANCH_TAG --file docker/Dockerfile . "${build_params[@]}" )
+          build_params=( --file docker/Dockerfile "${build_params[@]}" )
+
+          docker build "${build_params[@]}" .
+
+      - name: Push SHA
+        if: ${{inputs.CONTAINER_PUSH_SHA}}
+        env:
+          SHA_TAG: ${{ steps.tags.outputs.SHA_TAG }}
+        run: |
+          docker push $SHA_TAG
+      - name: Push BRANCH
+        if: ${{inputs.CONTAINER_PUSH_BRANCH}}
+        env:
+          BRANCH_TAG: ${{ steps.tags.outputs.BRANCH_TAG }}
+        run: |
+          docker push $BRANCH_TAG
