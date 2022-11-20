@@ -30,9 +30,9 @@ on:
         required: true
 
 # Cancel in progress builds
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 permissions:
   id-token: write
