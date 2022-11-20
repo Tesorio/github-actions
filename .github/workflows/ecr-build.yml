@@ -75,7 +75,7 @@ jobs:
 
       - name: Build
         env:
-          TARGET: ${{ inputs.CONTAINER_BUILD_TARGET || "" }}
+          TARGET: ${{ inputs.CONTAINER_BUILD_TARGET }}
           SHA_TAG: ${{ steps.tags.outputs.SHA_TAG }}
           BRANCH_TAG: ${{ steps.tags.outputs.BRANCH_TAG }}
           BUILD_ARGS: ""
