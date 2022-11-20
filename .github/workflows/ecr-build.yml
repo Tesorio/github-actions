@@ -1,4 +1,4 @@
-name: EKS build and deploy pipeline
+name: ECR build
 
 on:
   workflow_call:

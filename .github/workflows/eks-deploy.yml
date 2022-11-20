@@ -1,0 +1,63 @@
+name: ECR build
+
+on:
+  workflow_call:
+    inputs:
+      AWS_ROLE:
+        required: true
+        type: string
+      AWS_REGION:
+        required: false
+        type: string
+        default: us-east-1
+      EKS_CLUSTER:
+        required: true
+        type: string
+      EKS_HELM_CHART:
+        required: true
+        type: string
+      EKS_HELM_VALUES:
+        required: true
+        type: string
+      EKS_HELM_TAG:
+        required: true
+        type: string
+
+    secrets:
+      PAT_GITHUB:
+        required: true
+
+# Cancel in progress builds
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  deploy_pay:
+    runs-on: ubuntu-latest
+    steps:
+      - run: git config --global url."https://${{ secrets.PAT_GITHUB }}@github.com".insteadOf https://github.com
+      - uses: actions/checkout@v3
+        with:
+          repository: "Tesorio/helm"
+          token: ${{ secrets.PAT_GITHUB }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ inputs.AWS_ROLE }}
+          aws-region: ${{ inputs.AWS_REGION }}
+      - name: Login to Amazon EKS
+        id: eks
+        run: aws eks --region ${{ inputs.AWS_REGION }} update-kubeconfig --name ${{ inputs.EKS_CLUSTER }}
+      - name: install kubectl and helm
+        run: |
+          curl -LO "https://dl.k8s.io/release/v1.25.4/bin/linux/amd64/kubectl" && chmod +x kubectl && mv kubectl /usr/local/bin/
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && chmod 700 get_helm.sh && ./get_helm.sh
+      - name: deploy
+        run: |
+          kubectl config set-context --current --namespace=tesorio
+          helm upgrade pay ./${{ inputs.EKS_HELM_CHART }} --values ./${{ inputs.EKS_HELM_VALUES }} --set image.tag=${{ inputs.EKS_HELM_TAG }}
