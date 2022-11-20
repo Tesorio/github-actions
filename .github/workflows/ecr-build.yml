@@ -84,11 +84,10 @@ jobs:
           build_params=( --tag "$BRANCH_TAG" --tag "$SHA_TAG" )
           build_params=( --target "$TARGET" "${build_params[@]}" ) #TODO if $TARGET
           build_params=( --build-arg SSH_KEY=${{ secrets.SSH_KEY_BASE64}} "${build_params[@]}" )
-          build_params=( --cache-from $BRANCH_TAG --file docker/Dockerfile . "${build_params[@]}" )
+          build_params=( --cache-from $BRANCH_TAG "${build_params[@]}" )
+          build_params=( --file docker/Dockerfile "${build_params[@]}" )
 
-          echo "${build_params[@]}"
-
-          docker build --file docker/Dockerfile "${build_params[@]}" .
+          docker build "${build_params[@]}" .
 
       - name: Push SHA
         if: ${{inputs.CONTAINER_PUSH_SHA}}
