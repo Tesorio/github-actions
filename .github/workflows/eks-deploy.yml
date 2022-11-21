@@ -60,4 +60,4 @@ jobs:
       - name: deploy
         run: |
           kubectl config set-context --current --namespace=tesorio
-          helm upgrade pay ./${{ inputs.EKS_HELM_CHART }} --values ./${{ inputs.EKS_HELM_VALUES }} --set image.tag=${{ inputs.EKS_HELM_TAG }}
+          helm upgrade ${{ inputs.EKS_HELM_CHART }} ./${{ inputs.EKS_HELM_CHART }} --values ./${{ inputs.EKS_HELM_VALUES }} --set image.tag=${{ inputs.EKS_HELM_TAG }}
