@@ -50,6 +50,7 @@ jobs:
         with:
           role-to-assume: ${{ inputs.AWS_ROLE }}
           aws-region: ${{ inputs.AWS_REGION }}
+          mask-aws-account-id: "no"
       - name: Login to Amazon ECR
         id: ecr
         uses: aws-actions/amazon-ecr-login@v1

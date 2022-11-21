@@ -53,6 +53,7 @@ jobs:
         with:
           role-to-assume: ${{ inputs.AWS_ROLE }}
           aws-region: ${{ inputs.AWS_REGION }}
+          mask-aws-account-id: "no"
       - name: Login to Amazon EKS
         id: eks
         run: aws eks --region ${{ inputs.AWS_REGION }} update-kubeconfig --name ${{ inputs.EKS_CLUSTER }}
