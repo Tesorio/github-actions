@@ -13,6 +13,9 @@ on:
       EKS_CLUSTER:
         required: true
         type: string
+      EKS_HELM_RELEASE:
+        required: true
+        type: string
       EKS_HELM_CHART:
         required: true
         type: string
@@ -37,7 +40,7 @@ permissions:
   contents: write
 
 jobs:
-  deploy_pay:
+  eks_deploy:
     runs-on: ubuntu-latest
     steps:
       - run: git config --global url."https://${{ secrets.PAT_GITHUB }}@github.com".insteadOf https://github.com
@@ -60,4 +63,4 @@ jobs:
       - name: deploy
         run: |
           kubectl config set-context --current --namespace=tesorio
-          helm upgrade pay ./${{ inputs.EKS_HELM_CHART }} --values ./${{ inputs.EKS_HELM_VALUES }} --set image.tag=${{ inputs.EKS_HELM_TAG }}
+          helm upgrade ${{ inputs.EKS_HELM_RELEASE }} ./${{ inputs.EKS_HELM_CHART }} --values ./${{ inputs.EKS_HELM_VALUES }} --set image.tag=${{ inputs.EKS_HELM_TAG }}

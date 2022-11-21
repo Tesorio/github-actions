@@ -42,7 +42,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      TAG: ${{ steps.tags.outputs.SHA_TAG }}
+      IMAGE_TAG: ${{ steps.tags.outputs.SHA_TAG }} #full image name:tag
+      TAG: ${{ steps.tags.outputs.SHA }}
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -67,6 +68,7 @@ jobs:
           SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
           SHA_TAG="$ECR_REGISTRY/$CONTAINER_REPOSITORY:$SHA"
           echo "SHA_TAG=$SHA_TAG" >> $GITHUB_OUTPUT
+          echo "SHA=$SHA" >> $GITHUB_OUTPUT
 
       - name: Pre-Build
         env:
