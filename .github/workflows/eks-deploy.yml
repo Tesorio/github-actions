@@ -13,9 +13,6 @@ on:
       EKS_HELM_ENVIRONMENT:
         required: true
         type: string
-      EKS_HELM_RELEASE:
-        required: true
-        type: string
       EKS_HELM_CHART:
         required: true
         type: string
@@ -61,4 +58,4 @@ jobs:
       - name: deploy
         run: |
           kubectl config set-context --current --namespace=${{ inputs.EKS_HELM_ENVIRONMENT }}
-          helm upgrade ${{ inputs.EKS_HELM_RELEASE }} ./${{ inputs.EKS_HELM_CHART }} --values ./dashboard/vars/${{ inputs.EKS_HELM_ENVIRONMENT }}.yaml --set image.tag=${{ inputs.EKS_HELM_TAG }}
+          helm upgrade ${{ inputs.EKS_HELM_CHART }} ./${{ inputs.EKS_HELM_CHART }} --values ./${{ inputs.EKS_HELM_CHART }}/vars/${{ inputs.EKS_HELM_ENVIRONMENT }}.yaml --set image.tag=${{ inputs.EKS_HELM_TAG }}
