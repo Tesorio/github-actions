@@ -10,9 +10,6 @@ on:
         required: false
         type: string
         default: us-east-1
-      EKS_CLUSTER:
-        required: true
-        type: string
       EKS_HELM_ENVIRONMENT:
         required: true
         type: string
@@ -56,7 +53,7 @@ jobs:
           mask-aws-account-id: "no"
       - name: Login to Amazon EKS
         id: eks
-        run: aws eks --region ${{ inputs.AWS_REGION }} update-kubeconfig --name ${{ inputs.EKS_CLUSTER }}
+        run: aws eks --region ${{ inputs.AWS_REGION }} update-kubeconfig --name ${{ inputs.EKS_HELM_ENVIRONMENT }}-eks-cluster
       - name: install kubectl and helm
         run: |
           curl -LO "https://dl.k8s.io/release/v1.25.4/bin/linux/amd64/kubectl" && chmod +x kubectl && mv kubectl /usr/local/bin/
