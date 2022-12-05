@@ -13,13 +13,13 @@ on:
       EKS_CLUSTER:
         required: true
         type: string
+      EKS_HELM_ENVIRONMENT:
+        required: true
+        type: string
       EKS_HELM_RELEASE:
         required: true
         type: string
       EKS_HELM_CHART:
-        required: true
-        type: string
-      EKS_HELM_VALUES:
         required: true
         type: string
       EKS_HELM_TAG:
@@ -63,5 +63,5 @@ jobs:
           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && chmod 700 get_helm.sh && ./get_helm.sh
       - name: deploy
         run: |
-          kubectl config set-context --current --namespace=tesorio
-          helm upgrade ${{ inputs.EKS_HELM_RELEASE }} ./${{ inputs.EKS_HELM_CHART }} --values ./${{ inputs.EKS_HELM_VALUES }} --set image.tag=${{ inputs.EKS_HELM_TAG }}
+          kubectl config set-context --current --namespace=${{ inputs.EKS_HELM_ENVIRONMENT }}
+          helm upgrade ${{ inputs.EKS_HELM_RELEASE }} ./${{ inputs.EKS_HELM_CHART }} --values ./dashboard/vars/${{ inputs.EKS_HELM_ENVIRONMENT }}.yaml --set image.tag=${{ inputs.EKS_HELM_TAG }}
