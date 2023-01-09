@@ -62,7 +62,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
           CONTAINER_REPOSITORY: ${{ inputs.CONTAINER_REPOSITORY }}
         run: |
-          BRANCH=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')
+          BRANCH=$(echo ${GITHUB_REF#refs/})
+          BRANCH=$(echo ${BRANCH#heads/})
+          BRANCH=$(echo ${BRANCH#tags/})
+          BRANCH=$(echo ${BRANCH} | tr '/' '-')
           BRANCH_TAG="$ECR_REGISTRY/$CONTAINER_REPOSITORY:$BRANCH"
           echo "BRANCH_TAG=$BRANCH_TAG" >> $GITHUB_OUTPUT
 
